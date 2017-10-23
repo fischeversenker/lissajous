@@ -43,8 +43,8 @@
     let dots = new THREE.Points( dotGeometry, dotMaterial );
     scene.add( dots );
 
-    camera.position.x = Math.cos(Date.now() / 4000) * 21;
-    camera.position.z = Math.sin(Date.now() / 4000) * 21;
+    camera.position.x = Math.cos(Date.now() / 4000) * 30;
+    camera.position.z = Math.sin(Date.now() / 4000) * 30;
     camera.lookAt(new THREE.Vector3(0,0,0));
   	renderer.render( scene, camera );
   }
@@ -97,31 +97,32 @@
   }
   
   function setupLoadSave() {
+    
+    // react to save click
     setup_save.addEventListener('click', function() {
       if (setup_name.value != '') {
-        console.log('saving %s', setup_name.value);
-        let prev_setups_ls = localStorage.getItem('setups');
         let curr_setup = {name: setup_name.value, freqs: freqs};
-        let setups = [curr_setup];
-        if ( prev_setups_ls != null ) {
-          let prev_setups = JSON.parse(prev_setups_ls);
-          setups = setups.concat(prev_setups);
-        }
-        console.log('saving setups', setups);
+        addToLS(curr_setup);
         addToSelect(setup_name.value);
-        localStorage.setItem('setups', JSON.stringify(setups));
         setup_name.value = '';
       }
     });
     
+    // load existing setups
     let setups_ls = localStorage.getItem('setups');
-    if (setups_ls != null) {
-      let setups = JSON.parse(localStorage.getItem('setups'));
-      for ( let i = 0; i < setups.length; i++ ) {
-        addToSelect(setups[i].name);
-      }
+    
+    // add default
+    if ( getSetupFromLS('tulip (default)') == null) {
+      let s = {name: 'tulip (default)', freqs: {freq1: 400, freq2: 700, freq3: 1200}};
+      addToLS(s)
+    }
+  
+    let setups = JSON.parse(localStorage.getItem('setups'));
+    for ( let i = 0; i < setups.length; i++ ) {
+      addToSelect(setups[i].name);
     }
     
+    // react to load click
     setup_load.addEventListener('click', function() {
       var e = document.getElementById("select");
       var name = e.options[e.selectedIndex].text;
@@ -138,6 +139,16 @@
       }
     });
     
+    function addToLS(s) {
+      let setups = [s];
+      let prev_setups_ls = localStorage.getItem('setups');
+      if ( prev_setups_ls != null ) {
+        let prev_setups = JSON.parse(prev_setups_ls);
+        setups = setups.concat(prev_setups);
+      }
+      localStorage.setItem('setups', JSON.stringify(setups));
+    }
+    
     function addToSelect(option) {
       let node = document.createElement("OPTION");
       let textnode = document.createTextNode(option);
@@ -152,7 +163,6 @@
       let setups = JSON.parse(localStorage.getItem('setups'));
       for ( let i = 0; i < setups.length; i++ ) {
         if ( setups[i].name == name ) {
-          console.log('setup %s from LS:', name, setups[i]);
           return setups[i];
         }
       }
