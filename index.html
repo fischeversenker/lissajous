@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <div class="main">
+      <input id="freq1" type="range" min="0" max="2000" step="10" value="1600" />
+      <input id="freq2" type="range" min="0" max="2000" step="10" value="1200" />
+      <input id="freq3" type="range" min="0" max="2000" step="10" value="400" />
+      <div>
+        <input id="name" type="text" placeholder="name" /><input type="button" id="save" value="save" />
+      </div>
+      <div class="clearfix">
+        <select id="select">
+        </select>
+        <input type="button" id="load" value="load" />
+      </div>
+    </div>
+    <script src="three.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>
