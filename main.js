@@ -1,6 +1,7 @@
 
 
 (function() {
+  const config_overlay = document.querySelector('.main');
   const freq1_slider = document.querySelector('#freq1');
   const freq2_slider = document.querySelector('#freq2');
   const freq3_slider = document.querySelector('#freq3');
@@ -12,46 +13,57 @@
   const height = 800;
   let freqs;
   let val1, val2, val3;
-  const scale = 2;
+  const scale = 1;
   let scene;
   let camera;
   let renderer;
   let cube;
-  
+  let controls;
+
+  let cam_speed = 3000;
   let last_pos = null;
+  let counter = 0;
 
   function update() {
   	requestAnimationFrame( update );
 
     let dotGeometry = new THREE.Geometry();
 
-    for(let i = 0; i < 10; i++) {
-      val1 = (Date.now() / 100000) * freqs.freq1 / scale;
-      val2 = (Date.now() / 100000) * freqs.freq2 / scale;
-      val3 = (Date.now() / 100000) * freqs.freq3 / scale;
+    for(let i = 0; i < 1000; i++) {
+      let base = counter / scale;
+      val1 = base * freqs.freq1; // (Date.now() / 100000) * freqs.freq1 / scale;
+      val2 = base * freqs.freq2; // (Date.now() / 100000) * freqs.freq2 / scale;
+      val3 = base * freqs.freq3; // (Date.now() / 100000) * freqs.freq3 / scale;
       let pos = new THREE.Vector3();
-      pos.x = 15/2 * Math.cos(val1);
-      pos.y = 15/2 * Math.cos(val2);
-      pos.z = 15/2 * Math.cos(val3);
+      pos.x = 20/2 * Math.cos(val1);
+      pos.y = 20/2 * Math.sin(val2);
+      pos.z = 20/2 * Math.cos(val3);
       if ( last_pos != null ) {
         dotGeometry.vertices.push(new THREE.Vector3( pos.x, pos.y, pos.z));
       }
       last_pos = pos;
+      counter++;
     }
 
     let dotMaterial = new THREE.PointsMaterial( { size: 0.1, sizeAttenuation: true, color: 'white' } );
     let dots = new THREE.Points( dotGeometry, dotMaterial );
     scene.add( dots );
 
-    camera.position.x = Math.cos(Date.now() / 4000) * 30;
-    camera.position.z = Math.sin(Date.now() / 4000) * 30;
-    camera.lookAt(new THREE.Vector3(0,0,0));
-  	renderer.render( scene, camera );
+    // camera.position.x = Math.cos(Date.now() / cam_speed) * 25;
+    // camera.position.z = Math.sin(Date.now() / cam_speed) * 25;
+    // camera.lookAt(new THREE.Vector3(0,0,0));
+
+    controls.update();
+    render();
   }
-  
+
+  function render() {
+    renderer.render( scene, camera );
+  }
+
   function clear() {
-    while(scene.children.length > 0){ 
-      scene.remove(scene.children[0]); 
+    while(scene.children.length > 0){
+      scene.remove(scene.children[0]);
     }
   }
 
@@ -79,7 +91,7 @@
     freq1_slider.dataset.name = 'X-Freq';
     freq2_slider.dataset.name = 'Y-Freq';
     freq3_slider.dataset.name = 'Z-Freq';
-    
+
     function registerFreqListener(el, name) {
       el.addEventListener('input', function() {
         clear();
@@ -89,15 +101,15 @@
         freqs[name] = freq;
       });
     }
-    
+
     registerFreqListener(freq1_slider, 'freq1');
     registerFreqListener(freq2_slider, 'freq2');
     registerFreqListener(freq3_slider, 'freq3');
 
   }
-  
+
   function setupLoadSave() {
-    
+
     // react to save click
     setup_save.addEventListener('click', function() {
       if (setup_name.value != '') {
@@ -107,21 +119,21 @@
         setup_name.value = '';
       }
     });
-    
+
     // load existing setups
     let setups_ls = localStorage.getItem('setups');
-    
+
     // add default
     if ( getSetupFromLS('tulip (default)') == null) {
       let s = {name: 'tulip (default)', freqs: {freq1: 400, freq2: 700, freq3: 1200}};
       addToLS(s)
     }
-  
+
     let setups = JSON.parse(localStorage.getItem('setups'));
     for ( let i = 0; i < setups.length; i++ ) {
       addToSelect(setups[i].name);
     }
-    
+
     // react to load click
     setup_load.addEventListener('click', function() {
       var e = document.getElementById("select");
@@ -138,7 +150,7 @@
         freq3_slider.dataset.val = freqs.freq3;
       }
     });
-    
+
     function addToLS(s) {
       let setups = [s];
       let prev_setups_ls = localStorage.getItem('setups');
@@ -148,15 +160,15 @@
       }
       localStorage.setItem('setups', JSON.stringify(setups));
     }
-    
+
     function addToSelect(option) {
       let node = document.createElement("OPTION");
       let textnode = document.createTextNode(option);
       node.appendChild(textnode);
-      setup_select.appendChild(node); 
+      setup_select.appendChild(node);
     }
   }
-  
+
   function getSetupFromLS(name) {
     let setups_ls = localStorage.getItem('setups');
     if (setups_ls != null) {
@@ -173,21 +185,34 @@
   function init() {
     setupSliders();
     setupLoadSave();
-    
+
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+    controls = new THREE.OrbitControls( camera );
+    controls.addEventListener( 'change', render );
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );
-    camera.position.z = 20;
-    
+    camera.position.z = 15;
+
     window.addEventListener( 'resize', onWindowResize, false );
 
-    
+    window.addEventListener('keyup', function(evt) {
+      if (evt.keyCode === 67) {
+        controls.enabled = !controls.enabled;
+        if (!config_overlay.classList.contains('enabled')) {
+          config_overlay.classList.add('enabled');
+        } else {
+          config_overlay.classList.remove('enabled');
+        }
+      }
+    });
+
     window.setTimeout(update, 100);
   }
-  
+
   function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
